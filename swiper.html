@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./vue.js"></script>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        .cont_box{
+            padding: 10px 5px;
+        }
+        .img_box img{
+            display: inline-block;
+            width: 90px;
+            margin: 25px 8px;
+            border-radius: 15px;
+            border: 3px solid white;
+        }
+        .img_box .choose{
+            border: 3px purple solid;
+        }
+        .swiper_box{
+            padding: 20px;
+        }
+        .view{
+            width: 300px;
+            height: 300px;
+            border: 5px solid black;
+            position: relative;
+            overflow: hidden;
+        }
+        .view img{
+            font-size: 0;
+            width: 300px;
+            height: 300px;
+            position: absolute;
+        }
+        .swiper .con{
+            background-color: aqua;
+            color: whitesmoke;
+        }
+        /* 动画 */
+        .next-enter{
+            margin-left: 300px;
+        }
+        .next-leave-to{
+            margin-left: -300px;
+        }
+        .next-enter-active,.next-leave-active{
+            transition: .5s;
+        }
+        .prev-enter{
+            margin-left: -300px;
+        }
+        .prev-leave-to{
+            margin-left: 300px;
+        }
+        .prev-enter-active,.prev-leave-active{
+            transition: .5s;
+        }
+    </style>
+</head>
+<body>
+    <div id="app"> 
+         <div class="cont_box">
+            <h4>选择图片</h4>
+            <div class="img_box"><img @click="sel(item)" :class="{choose:(result.indexOf(item)!=-1)}" v-for="(item,index) in imgs" :src="'images/'+item+'.jpg'" alt=""> </div>
+            <h4>是否自动播放: <input type="checkbox" v-model="play"><span v-html="play?'开启':'关闭'"></span></h4>
+        </div>
+        <hr>
+        <swiper :sel_imgs="result" :auto="play"></swiper>
+
+
+        <swiper :sel_imgs="imgs"></swiper>
+        
+    </div>
+</body>
+<script>
+    Vue.component("swiper",{
+        // play 自动轮播 1  否则 0   默认自动
+        props:["auto","sel_imgs"],
+        template:`
+            <div class="swiper_box">
+                <h3>轮播图组件</h3>
+                <h4>您选择的图片</h4>
+                <div class="img_box"><img v-for="(item,index) in sel_imgs" :src="'images/'+item+'.jpg'" alt=""> </div>
+                <!-- 轮播 -->
+                <div class="swiper" @mouseover="over" @mouseout="out">
+                    <div class="view">
+                        <transition v-for="(item,index) in sel_imgs" :key="index" :name="type">
+                            <img v-show="index==ind" :src="'images/'+item+'.jpg'" alt="">
+                        </transition>
+                    </div>
+                    <div>
+                        <button @click="prev">prev</button>
+                            <button v-for="(item,index) in sel_imgs.length" :class="{con:index==ind}" @click="ind=index">{{ index+1 }}</button>
+                        <button @click="next">next</button>
+                    </div>
+                </div>
+            </div>
+        `,
+        data() {
+            return {
+                // 是否自动播放
+                // auto:true,
+                type:"next", //动画name
+                ind:0,
+                timer:null
+            }
+        },
+        methods:{
+            prev:function(){
+            this.type="prev";
+            this.ind++;
+            if(this.ind>this.sel_imgs.length - 1){
+                this.ind = 0; 
+            } 
+            },
+            next:function(){
+                this.type = "next";
+                this.ind--;
+                if(this.ind<0){
+                    this.ind = this.sel_imgs.length - 1;
+                }
+            },
+            over:function(){
+                clearInterval(this.timer);
+            },
+            out:function(){
+                this.initTimer();
+            },
+            initTimer:function(){
+            if(!this.auto){
+                return;
+            }
+            this.timer= setInterval(() => {
+                    this.type = "next";
+                    this.ind++;
+                    if(this.ind>this.sel_imgs.length - 1){
+                        this.ind = 0; 
+                    }
+                }, 1000);
+            },
+        },
+        created() {
+            // 定时器
+            this.initTimer();
+            // 自动播放？
+            if(this.play==0){
+                this.auto = false;
+            }
+        },
+        watch: {
+            // 自动播放
+            auto:function(){
+                if(this.auto){
+                    this.initTimer();
+                }else{
+                    clearInterval(this.timer);
+                }
+            },
+        },
+    });
+
+ var app=new Vue({
+    el:"#app",
+    data:{
+        imgs:["a","b","c","d","e"],
+        result:[],
+        play:true
+    },
+    methods:{
+        sel:function(item){
+            // 确定是选择还是取消
+            var index = this.result.indexOf(item);
+            if(index == -1){
+                this.result.push(item);
+            }else{
+                if(this.result.length==2){
+                alert("至少选择两张！");
+                    return;
+                }
+                this.result.splice(index,1);
+            }
+        },
+    },
+    created(){
+        for (let i = 0; i < this.imgs.length-1; i++) {
+            if(i<2){
+                this.result.push(this.imgs[i]);
+            } 
+        }
+    },
+ });
+</script>
+</html>
